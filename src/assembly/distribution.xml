@@ -1,0 +1,24 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 http://maven.apache.org/xsd/assembly-2.2.0.xsd">
+    <id>distribution</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <outputDirectory>/config</outputDirectory>
+            <directory>src/main/resources/config</directory>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>/</outputDirectory>
+            <directory>src/script</directory>
+        </fileSet>
+    </fileSets>
+    <files>
+        <file>
+            <outputDirectory>/</outputDirectory>
+            <source>target/auth.jar</source>
+        </file>
+    </files>
+</assembly>

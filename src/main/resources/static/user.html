@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>user</title>
+</head>
+<body>
+<div class="row mb-6" style="margin-top: 20px;">
+    <label for="search-username" class="col-form-label col-sm-1">username:</label>
+    <div class="col-sm-1">
+        <input id="search-username" maxlength="10" class="form-control">
+    </div>
+    <label for="search-beginTime" class="col-form-label col-sm-1">create time:</label>
+    <div class="col-sm-2">
+        <input id="search-beginTime" type="datetime-local" class="form-control date-picker"
+               onchange="validateCreateTime()">
+    </div>
+    <div class="col-sm-1" style="width: 10px"> -</div>
+    <div class="col-sm-2">
+        <label for="search-endTime" style="display: none"></label>
+        <input id="search-endTime" type="datetime-local" class="form-control date-picker"
+               onchange="validateCreateTime()">
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" onclick="search()">search</button>
+        <button class="btn btn-primary" id="addUserButton">add</button>
+    </div>
+</div>
+<div class="h-50 w-100" style="margin-top: 20px">
+    <table class="table table-borderless">
+        <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Username</th>
+            <th scope="col">CreateTime</th>
+            <th scope="col">UpdateTime</th>
+            <th scope="col">Operation</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <ul class="pagination">
+    </ul>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="userInfoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">User info</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-3">
+                        username:
+                    </div>
+                    <div id="userinfo-username" class="col">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        create time:
+                    </div>
+                    <div id="userinfo-createTime" class="col">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        update time:
+                    </div>
+                    <div id="userinfo-updateTime" class="col">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!--                <button type="button" class="btn btn-primary">Save changes</button>-->
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+    function validateCreateTime() {
+        let beginTime = $('#beginTime');
+        let endTime = $('#endTime');
+        if (beginTime.val() && endTime.val() && endTime.val() < beginTime.val()) {
+            alert('beginTime must be le endTime ');
+            beginTime.val('');
+            endTime.val('');
+        }
+    }
+
+    function initUserInfoModal(e) {
+        let id = $(e).parent().parent().find('th:first-child').text();
+        axios.get('/user/info?id=' + id)
+            .then(function (resp) {
+                $('#userinfo-username').text(resp.data.username);
+                $('#userinfo-createTime').text(resp.data.createTime);
+                $('#userinfo-updateTime').text(resp.data.updateTime);
+            })
+            .catch(function () {
+            })
+            .finally(function () {
+            });
+    }
+
+    function edit(e) {
+        let row = $(e).parent().parent().find('th:first-child').text();
+        alert('edit user' + row);
+    }
+
+    function del(e) {
+        let userId = $(e).parent().parent().find('th:first-child').text();
+        axios.delete('/user/id/' + userId)
+            .then(function () {
+                alert("success");
+            })
+            .catch()
+            .finally()
+    }
+
+    $(document).ready(function () {
+        page(1, 5);
+    });
+
+    function search() {
+        page(1, 5);
+    }
+
+    function page(pageNum, pageSize) {
+        let queryStr = '';
+        pageNum = pageNum ? pageNum : 1;
+        pageSize = pageSize ? pageSize : 10;
+        let username = $('#search-username').val();
+        let beginTime = $('#search-beginTime').val();
+        let endTime = $('#search-endTime').val();
+        if (username){
+            queryStr += 'username=' + username;
+        }
+        if (beginTime){
+            queryStr += '&beginTime=' + new Date(beginTime).getTime();
+        }
+        if (endTime){
+            queryStr += '&endTime=' + new Date(endTime).getTime();
+        }
+        queryStr += '&pageNum=' + pageNum;
+        queryStr += '&pageSize=' + pageSize;
+
+        axios.get('/user/page?' + queryStr)
+            .then(function (resp) {
+
+                renderPage(resp);
+
+                let $tbody = $('tbody');
+                $tbody.empty();
+                let content = resp.data.content;
+                for (let i = 0; i < content.length; i++) {
+                    let row = $('<tr>\n' +
+                        '        <th scope="row">' + content[i].id + '</th>\n' +
+                        '        <td>' + content[i].username + '</td>\n' +
+                        '        <td>' + content[i].createTime + '</td>\n' +
+                        '        <td>' + content[i].updateTime + '</td>\n' +
+                        '        <td>\n' +
+                        '            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userInfoModal" onclick="initUserInfoModal(this)">info</button>\n' +
+                        '            <button type="button" class="btn btn-warning" onclick="edit(this)">edit</button>\n' +
+                        '            <button type="button" class="btn btn-danger" onclick="del(this)">delete</button>\n' +
+                        '        </td>\n' +
+                        '    </tr>');
+                    $tbody.append(row);
+                }
+            })
+            .catch(function (e) {
+            })
+            .finally(function () {
+            })
+    }
+
+    function renderPage(resp){
+        let $pagination = $('.pagination');
+        $pagination.empty();
+        $pagination.pagination({
+            items: resp.data.totalPages,
+            cssStyle: 'dark-theme',
+            currentPage: resp.data.number + 1,
+            onPageClick: function (pageNum, event){
+                event.stopPropagation();
+                event.preventDefault();
+                page(pageNum, 5);
+            }
+        })
+    }
+</script>
+
+</html>

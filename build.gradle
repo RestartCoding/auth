@@ -1,0 +1,45 @@
+plugins {
+    id 'application'
+    id 'jacoco'
+    id 'org.springframework.boot' version '2.7.13'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.genepoint'
+version = '1.0.0-SNAPSHOT'
+sourceCompatibility = 17
+
+repositories{
+    mavenCentral()
+}
+
+dependencies{
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('org.springframework.boot:spring-boot-starter-actuator')
+    implementation('org.springframework.boot:spring-boot-starter-security')
+    implementation('org.springframework.boot:spring-boot-starter-validation')
+    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
+    implementation('org.postgresql:postgresql')
+
+    implementation('org.projectlombok:lombok')
+    annotationProcessor ('org.projectlombok:lombok')
+
+    implementation('ch.qos.logback.contrib:logback-json-classic:0.1.5')
+    implementation('ch.qos.logback.contrib:logback-jackson:0.1.5')
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+}
+
+jacoco{
+    toolVersion = '0.8.9'
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+}
