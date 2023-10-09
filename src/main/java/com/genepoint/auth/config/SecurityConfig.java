@@ -7,6 +7,7 @@ import com.genepoint.auth.service.UserService;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -47,13 +48,12 @@ public class SecurityConfig {
     private AuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
+    SecurityFilterChain securityFilterChain(HttpSecurity http, @Value("${auth.ignore-path}") String ignorePath) throws Exception {
 
         http.csrf().disable();
 
         http.authorizeRequests()
-                .antMatchers("/user/login").permitAll()
+                .antMatchers(ignorePath.split(",")).permitAll()
                 .anyRequest().authenticated();
 
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);

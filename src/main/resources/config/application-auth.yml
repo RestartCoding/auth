@@ -1,0 +1,2 @@
+auth:
+  ignore-path: /user/login,/token/validate
