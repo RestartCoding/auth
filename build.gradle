@@ -1,6 +1,5 @@
 plugins {
     id 'application'
-    id 'jacoco'
     id 'org.springframework.boot' version '2.7.13'
     id 'maven-publish'
 }
@@ -32,24 +31,23 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 
-jacoco {
-    toolVersion = '0.8.9'
-}
-
-test {
-    useJUnitPlatform()
-    finalizedBy jacocoTestReport
-}
-
-jacocoTestReport {
-    dependsOn test
+jar {
+    enabled = false
 }
 
 // publish
 publishing {
 
     publications {
-        library(MavenPublication) {
+
+        bootJava(MavenPublication) {
+            artifact tasks.named("bootJar")
+        }
+
+        maven(MavenPublication){
+            groupId = 'com.genepoint'
+            artifactId = 'auth'
+            version = '1.0.0-SNAPSHOT'
             from components.java
         }
     }

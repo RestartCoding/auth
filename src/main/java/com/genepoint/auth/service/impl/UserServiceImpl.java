@@ -22,8 +22,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -55,6 +57,8 @@ public class UserServiceImpl implements UserService {
 
     private final TokenStorageStrategy tokenStorage;
 
+    private final PasswordEncoder passwordEncoder;
+
     @Override
     public Page<User> page(UserPageQueryDTO req) {
         Specification<User> spec = new Specification<>() {
@@ -62,7 +66,7 @@ public class UserServiceImpl implements UserService {
             final List<Predicate> predicates = new ArrayList<>();
 
             @Override
-            public Predicate toPredicate(Root<User> root, CriteriaQuery<?> cq, CriteriaBuilder cb) {
+            public Predicate toPredicate(@NonNull Root<User> root, @NonNull CriteriaQuery<?> cq, @NonNull CriteriaBuilder cb) {
                 if (StringUtils.hasText(req.getUsername())) {
                     Predicate usernameLike = cb.like(root.get("username"), "%" + req.getUsername() + "%");
                     predicates.add(usernameLike);
@@ -112,6 +116,8 @@ public class UserServiceImpl implements UserService {
 
         User user = new User();
         BeanUtils.copyProperties(param, user);
+        // encode password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         Optional<User> optionalUser = userRepository.findByUsername(user.getUsername());
         if (optionalUser.isPresent()) {
@@ -161,21 +167,22 @@ public class UserServiceImpl implements UserService {
     @Override
     public Token login(LoginDTO dto) {
         Optional<User> userByUsername = userRepository.findByUsername(dto.getUsername());
-        if (userByUsername.isEmpty()){
+        if (userByUsername.isEmpty()) {
             log.error("failed to login cause user [{}] not found", dto.getUsername());
             throw new BusinessException("Incorrect username or password");
         }
         User user = userByUsername.get();
-        if (!user.getPassword().equals(dto.getPassword())){
+        boolean passwordMatch = passwordEncoder.matches(dto.getPassword(), user.getPassword());
+        if (!passwordMatch) {
             log.error("failed to login cause incorrect password");
             throw new BusinessException("Incorrect username or password");
         }
 
         Optional<Token> optionalToken = tokenStorage.loadByUsername(user.getUsername());
         Token token;
-        if (optionalToken.isEmpty()){
+        if (optionalToken.isEmpty()) {
             token = new Token(UUID.randomUUID().toString().replace("-", ""), user);
-        }else {
+        } else {
             token = optionalToken.get();
             token.refresh();
         }

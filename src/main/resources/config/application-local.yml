@@ -18,3 +18,5 @@ logging:
         type:
           descriptor:
             sql: trace
+    com:
+      genepoint: debug
