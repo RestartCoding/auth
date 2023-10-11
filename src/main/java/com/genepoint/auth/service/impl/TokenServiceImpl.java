@@ -2,6 +2,7 @@ package com.genepoint.auth.service.impl;
 
 import com.genepoint.auth.domain.Token;
 import com.genepoint.auth.domain.TokenStorageStrategy;
+import com.genepoint.auth.exception.BusinessException;
 import com.genepoint.auth.service.TokenService;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -35,5 +36,11 @@ public class TokenServiceImpl implements TokenService {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public Token info(String token) {
+        Optional<Token> optionalToken = tokenStorageStrategy.loadByTokenValue(token);
+        return optionalToken.orElse(null);
     }
 }

@@ -3,10 +3,7 @@ package com.genepoint.auth.controller.dto;
 import com.genepoint.auth.controller.dto.token.TokenValidationDTO;
 import com.genepoint.auth.service.TokenService;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Map;
@@ -26,5 +23,10 @@ public class TokenController {
     public ApiResponse<Object> validate(@RequestBody @Valid TokenValidationDTO dto) {
         boolean valid = tokenService.validate(dto.getToken());
         return ApiResponse.ok(Map.of("valid", valid));
+    }
+
+    @GetMapping("/info")
+    public ApiResponse<Object> info(String token) {
+        return ApiResponse.ok(tokenService.info(token));
     }
 }
